@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hutu.hutuojbackendquestionservice.mapper.QuestionSubmitMapper">
+
+    <resultMap id="BaseResultMap" type="com.hutu.hutuojmodel.model.entity.QuestionSubmit">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="language" column="language" jdbcType="VARCHAR"/>
+            <result property="code" column="code" jdbcType="VARCHAR"/>
+            <result property="judgeInfo" column="judgeInfo" jdbcType="VARCHAR"/>
+            <result property="status" column="status" jdbcType="INTEGER"/>
+            <result property="questionId" column="questionId" jdbcType="BIGINT"/>
+            <result property="userId" column="userId" jdbcType="BIGINT"/>
+            <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+            <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,language,code,
+        judgeInfo,status,questionId,
+        userId,createTime,updateTime,
+        isDelete
+    </sql>
+    <select id="selectTopPassedUsers" resultType="com.hutu.hutuojmodel.model.dto.question.UserSubmitStatsDTO">
+        SELECT
+        qs.userId AS userId,
+        u.userName AS userName,
+        SUM(CASE WHEN qs.status = 2 THEN 1 ELSE 0 END) AS passedCount,  <!-- 通过提交次数 -->
+        COUNT(qs.id) AS totalSubmit  <!-- 总提交次数 -->
+        FROM question_submit qs
+        LEFT JOIN user u ON qs.userId = u.id
+        WHERE qs.isDelete = 0
+        AND u.isDelete = 0
+        GROUP BY qs.userId
+        ORDER BY passedCount DESC
+        LIMIT 10
+    </select>
+
+</mapper>
