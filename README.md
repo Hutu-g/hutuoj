@@ -69,7 +69,7 @@ spring:
       discovery:
         server-addr: 127.0.0.1:8848
 ```
- 
+
 ### RabbitMQ 配置
 ```yaml
 spring:
