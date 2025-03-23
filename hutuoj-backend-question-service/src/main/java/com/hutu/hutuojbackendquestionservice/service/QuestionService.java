@@ -4,11 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.hutu.hutuojmodel.model.dto.question.QuestionQueryRequest;
+import com.hutu.hutuojmodel.model.entity.Comment;
 import com.hutu.hutuojmodel.model.entity.Question;
 import com.hutu.hutuojmodel.model.vo.QuestionVO;
 
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author 478234818
@@ -50,4 +52,23 @@ public interface QuestionService extends IService<Question> {
      * @return
      */
     Page<QuestionVO> getQuestionVOPage(Page<Question> questionPage, HttpServletRequest request);
+
+    /**
+     * 获取推荐题目推荐列表
+     * @param userId
+     * @return
+     */
+    List<QuestionVO> getRecommendations(Long userId);
+
+    /**
+     * 根据题目id获取评论区信息
+     * @param questionId
+     * @return
+     */
+    List<Comment> getCommentListByPage(Long questionId);
+
+
+    Long addComment(Comment comment);
+
+    Boolean deleteComment(Long id);
 }

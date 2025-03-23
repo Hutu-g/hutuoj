@@ -19,7 +19,7 @@ public class QuestionRankListVO implements Serializable {
     /**
      * 用户id
      */
-    private Long id;
+    private Long userId;
 
     /**
      * 用户名字

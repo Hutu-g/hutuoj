@@ -2,11 +2,9 @@ package com.hutu.hutuojbackendquestionservice.mapper;
 
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.hutu.hutuojmodel.model.dto.question.UserSubmitStatsDTO;
+import com.hutu.hutuojmodel.model.entity.Comment;
 import com.hutu.hutuojmodel.model.entity.Question;
 import com.hutu.hutuojmodel.model.entity.QuestionRecommendations;
-
-import java.util.List;
 
 /**
 * @author 478234818
@@ -14,8 +12,7 @@ import java.util.List;
 * @createDate 2023-08-09 15:40:54
 * @Entity generator.domain.Question
 */
-public interface QuestionMapper extends BaseMapper<Question> {
-    QuestionRecommendations selectQuestionRecommendations(Long userId);
+public interface CommentMapper extends BaseMapper<Comment> {
 }
 
 

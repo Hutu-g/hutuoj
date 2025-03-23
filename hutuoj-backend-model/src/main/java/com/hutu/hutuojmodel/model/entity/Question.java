@@ -1,10 +1,15 @@
 package com.hutu.hutuojmodel.model.entity;
 
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.annotation.*;
+import com.hutu.hutuojmodel.model.dto.question.JudgeConfig;
+import com.hutu.hutuojmodel.model.vo.QuestionVO;
 import lombok.Data;
+import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 题目

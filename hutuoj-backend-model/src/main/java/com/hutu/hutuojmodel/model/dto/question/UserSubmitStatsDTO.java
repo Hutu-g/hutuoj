@@ -13,7 +13,8 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class UserSubmitStatsDTO {
     private Long userId;
-    private String userName;
-    private Integer passedCount;  // 通过数量
-    private Integer totalSubmit;  // 总提交量
+
+    private String submitQuestionNum;
+
+    private String acceptedQuestionNum;
 }

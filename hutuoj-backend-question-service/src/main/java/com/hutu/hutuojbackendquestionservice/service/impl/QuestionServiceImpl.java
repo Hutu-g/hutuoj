@@ -1,10 +1,16 @@
 package com.hutu.hutuojbackendquestionservice.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hutu.hutuojbackendquestionservice.mapper.QuestionMapper;
+import com.hutu.hutuojbackendquestionservice.service.CommentService;
 import com.hutu.hutuojbackendquestionservice.service.QuestionService;
 import com.hutu.hutuojbackendserviceclient.service.UserFeignClient;
 import com.hutu.hutuojcommon.common.ErrorCode;
@@ -13,10 +19,13 @@ import com.hutu.hutuojcommon.exception.BusinessException;
 import com.hutu.hutuojcommon.exception.ThrowUtils;
 import com.hutu.hutuojcommon.utils.SqlUtils;
 import com.hutu.hutuojmodel.model.dto.question.QuestionQueryRequest;
+import com.hutu.hutuojmodel.model.entity.Comment;
 import com.hutu.hutuojmodel.model.entity.Question;
+import com.hutu.hutuojmodel.model.entity.QuestionRecommendations;
 import com.hutu.hutuojmodel.model.entity.User;
 import com.hutu.hutuojmodel.model.vo.QuestionVO;
 import com.hutu.hutuojmodel.model.vo.UserVO;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -24,23 +33,27 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
-* @author 478234818
-* @description 针对表【question(题目)】的数据库操作Service实现
-* @createDate 2023-08-09 15:40:54
-*/
+ * @author 478234818
+ * @description 针对表【question(题目)】的数据库操作Service实现
+ * @createDate 2023-08-09 15:40:54
+ */
+@Slf4j
 @Service
 public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> implements QuestionService {
     @Resource
     private UserFeignClient userFeignClient;
 
+    @Resource
+    private CommentService commentService;
+
+
     /**
      * 校验题目是否合法
+     *
      * @param question
      * @param add
      */
@@ -165,6 +178,109 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         questionVOPage.setRecords(questionVOList);
         return questionVOPage;
     }
+
+    /**
+     * 获取推荐题目推荐列表
+     *
+     * @param userId
+     * @return
+     */
+    @Override
+    public List<QuestionVO> getRecommendations(Long userId) {
+        //查询推荐列表
+        QuestionRecommendations questionRecommendations = baseMapper.selectQuestionRecommendations(userId);
+        List<Question> questions;
+        if (questionRecommendations == null || StringUtils.isBlank(questionRecommendations.getRecommendations())) {
+            // 随机推荐10题（MySQL随机语法）
+            log.info("随机推荐10题");
+            questions = getRandomQuestions(10);
+        } else {
+            log.info("查询推荐表题");
+            List<Long> questionIds = parseRecommendationJson(questionRecommendations.getRecommendations());
+            questions = baseMapper.selectBatchIds(questionIds);
+        }
+        return questions.stream().map(QuestionVO::objToVo).collect(Collectors.toList());
+    }
+
+    //获取所有questionId字段
+    private List<Long> parseRecommendationJson(String recommendations) {
+        List<Long> questionIds = new ArrayList<>();
+        JSONArray jsonArray = JSON.parseArray(recommendations);
+        for (Object obj : jsonArray) {
+            JSONObject jsonObject = (JSONObject) obj;
+            Long questionId = jsonObject.getLong("questionId");
+            if (questionId != null) {
+                questionIds.add(questionId);
+            }
+        }
+        return questionIds;
+    }
+
+    //随机获取10道题目
+    private List<Question> getRandomQuestions(int count) {
+        QueryWrapper<Question> queryWrapper = Wrappers.query();
+        // 使用 ORDER BY RAND() 进行随机排序
+        queryWrapper.last("ORDER BY RAND() LIMIT 10");
+        // 执行查询
+        return this.list(queryWrapper);
+    }
+
+    /**
+     * 根据题目id获取评论区信息
+     *
+     * @param questionId
+     * @return
+     */
+    @Override
+    public List<Comment> getCommentListByPage(Long questionId) {
+        LambdaQueryWrapper<Comment> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Comment::getQuestionId, questionId);
+        //构建评论树构建评论树并返回
+        return processComments(commentService.list(wrapper));
+    }
+
+    //构建评论树
+    public static List<Comment> processComments(List<Comment> list) {
+        // (id, Comment)
+        Map<Long, Comment> map = new HashMap<>();
+        //result是一级评论列表
+        List<Comment> result = new ArrayList<>();
+        // 将所有根评论加入 map
+        for (Comment comment : list) {
+            if (comment.getParentId() == null) {
+                result.add(comment);
+            }
+            map.put(comment.getId(), comment);
+        }
+        // 子评论加入到父评论的 children 中
+        for (Comment comment : list) {
+            Long parentId = comment.getParentId();
+            // 当前评论为子评论
+            if (parentId != null) {
+                Comment p = map.get(parentId);
+                // children 为空，则创建
+                if (p.getChildren() == null) {
+                    p.setChildren(new ArrayList<>());
+                }
+                p.getChildren().add(comment);
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Long addComment(Comment comment) {
+        boolean save = commentService.save(comment);
+        ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR);
+        return comment.getId();
+    }
+
+    @Override
+    public Boolean deleteComment(Long id) {
+        return commentService.removeById(id);
+    }
+
+
 }
 
 

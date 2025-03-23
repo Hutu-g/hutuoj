@@ -61,16 +61,6 @@ public class QuestionSubmit implements Serializable {
 
 
     /**
-     * 使用内存
-     */
-    private Integer useMemory;
-
-    /**
-     * 耗时时间
-     */
-    private Integer useTime;
-
-    /**
      * 是否删除
      */
     @TableLogic

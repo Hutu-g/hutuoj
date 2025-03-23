@@ -31,6 +31,7 @@ import com.hutu.hutuojmodel.model.vo.QuestionSubmitVO;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -56,7 +57,8 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
 
     @Resource
     private MyMessageProducer myMessageProducer;
-
+    @Autowired
+    private UserFeignClient userFeignClient;
 
 
     /**
@@ -98,7 +100,7 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         }
         Long questionSubmitId = questionSubmit.getId();
 
-        myMessageProducer.sendMessage("code_exchange","my_routingKey",String.valueOf(questionSubmitId));
+        myMessageProducer.sendMessage("code_exchange", "my_routingKey", String.valueOf(questionSubmitId));
 //        //异步执行代码
 //        CompletableFuture.runAsync(() -> {
 //            judgeFeignClient.doJudge(questionSubmitId);
@@ -133,15 +135,11 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
     @Override
     public Page<QuestionRankListVO> getUserRankingList(QuestionRankListRequest questionRankListRequest) {
         // 1. 执行原生SQL查询
-        List<UserSubmitStatsDTO> statsList = baseMapper.selectTopPassedUsers();
+        List<QuestionRankListVO> statsList = baseMapper.selectTopPassedUsers();
 
         // 2. 转换为VO
         List<QuestionRankListVO> voList = statsList.stream()
-                .map(dto -> new QuestionRankListVO()
-                        .setId(dto.getUserId())
-                        .setUserName(dto.getUserName())
-                        .setAcceptedQuestionNum(dto.getPassedCount())
-                        .setSubmitQuestionNum(dto.getTotalSubmit()))
+                .map(dto -> dto.setUserName(userFeignClient.getById(dto.getUserId()).getUserName()))
                 .collect(Collectors.toList());
 
         // 3. 构造分页对象（固定前10条）

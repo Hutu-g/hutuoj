@@ -14,11 +14,13 @@ import com.hutu.hutuojcommon.common.ResultUtils;
 import com.hutu.hutuojcommon.constant.UserConstant;
 import com.hutu.hutuojcommon.exception.BusinessException;
 import com.hutu.hutuojcommon.exception.ThrowUtils;
+import com.hutu.hutuojmodel.model.dto.Comment.CommentAddRequest;
 import com.hutu.hutuojmodel.model.dto.question.*;
 import com.hutu.hutuojmodel.model.dto.questionSubmit.QuestionRankListRequest;
 import com.hutu.hutuojmodel.model.dto.questionSubmit.QuestionSubmitAddRequest;
 import com.hutu.hutuojmodel.model.dto.questionSubmit.QuestionSubmitListRequest;
 import com.hutu.hutuojmodel.model.dto.questionSubmit.QuestionSubmitQueryRequest;
+import com.hutu.hutuojmodel.model.entity.Comment;
 import com.hutu.hutuojmodel.model.entity.Question;
 import com.hutu.hutuojmodel.model.entity.User;
 import com.hutu.hutuojmodel.model.vo.CurrentQuestionSubmitVO;
@@ -94,7 +96,6 @@ public class QuestionController {
 
     /**
      * 删除
-     *
      * @param deleteRequest
      * @param request
      * @return
@@ -358,6 +359,94 @@ public class QuestionController {
         //返回脱敏信息
         return ResultUtils.success(questionSubmitService.getUserRankingList(questionRankListRequest));
     }
+
+
+    /**
+     * 获取推荐题目推荐列表
+     * @param request
+     * @return
+     */
+    @GetMapping("/get/recommendations")
+    public BaseResponse<List<QuestionVO>> getRecommendations(HttpServletRequest request) {
+        Long userId = userFeignClient.getLoginUser(request).getId();
+        if (userId == null) {
+            ResultUtils.error(ErrorCode.NOT_LOGIN_ERROR);
+        }
+
+        return ResultUtils.success(questionService.getRecommendations(userId));
+    }
+
+    /**
+     * 根据题目id获取评论区信息
+     * @param questionId
+     * @param request
+     * @return
+     */
+    @GetMapping("/comment/get/list")
+    public BaseResponse<List<Comment>> getCommentList(long questionId, HttpServletRequest request) {
+        Long userId = userFeignClient.getLoginUser(request).getId();
+        if (userId == null) {
+            ResultUtils.error(ErrorCode.NOT_LOGIN_ERROR);
+        }
+        return ResultUtils.success(questionService.getCommentListByPage(questionId));
+    }
+
+    /**
+     * 新增评论
+     * @param commentAddRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/comment/add")
+    public BaseResponse<Long> addComment(@RequestBody CommentAddRequest commentAddRequest, HttpServletRequest request) {
+        //校验登录数据
+        User loginUser = userFeignClient.getLoginUser(request);
+        if (loginUser.getId() == null) {
+            ResultUtils.error(ErrorCode.NOT_LOGIN_ERROR);
+        }
+        //校验上传数据
+        if (commentAddRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"参数为空");
+        }
+        if (commentAddRequest.getContent().length() >100){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"参数过长");
+        }
+
+
+        Comment comment = new Comment();
+        BeanUtils.copyProperties(commentAddRequest, comment);
+        comment.setUserId(loginUser.getId());
+        return ResultUtils.success(questionService.addComment(comment));
+    }
+
+    /**
+     * 删除
+     * @param deleteRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/comment/delete")
+    public BaseResponse<Boolean> deleteComment(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
+        //校验登录数据
+        User loginUser = userFeignClient.getLoginUser(request);
+        if (loginUser.getId() == null) {
+            ResultUtils.error(ErrorCode.NOT_LOGIN_ERROR);
+        }
+        //校验参数数据
+        if (deleteRequest == null || deleteRequest.getId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        return ResultUtils.success(questionService.deleteComment(deleteRequest.getId()));
+    }
+
+
+
+
+
+
+
+
+
 
 
 }

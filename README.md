@@ -20,3 +20,9 @@
 * jdk1.8
 * SpringBoot2.6.13
 * SpringCloud2021.0.5
+* 
+### 测试
+* Api Documentation http://localhost:8101/doc.html#/home
+
+
+

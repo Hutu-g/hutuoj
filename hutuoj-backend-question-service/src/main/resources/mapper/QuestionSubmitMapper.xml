@@ -16,26 +16,18 @@
             <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
             <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
     </resultMap>
-
-    <sql id="Base_Column_List">
-        id,language,code,
-        judgeInfo,status,questionId,
-        userId,createTime,updateTime,
-        isDelete
-    </sql>
-    <select id="selectTopPassedUsers" resultType="com.hutu.hutuojmodel.model.dto.question.UserSubmitStatsDTO">
+    <select id="selectTopPassedUsers" resultType="com.hutu.hutuojmodel.model.vo.QuestionRankListVO">
         SELECT
-        qs.userId AS userId,
-        u.userName AS userName,
-        SUM(CASE WHEN qs.status = 2 THEN 1 ELSE 0 END) AS passedCount,  <!-- 通过提交次数 -->
-        COUNT(qs.id) AS totalSubmit  <!-- 总提交次数 -->
-        FROM question_submit qs
-        LEFT JOIN user u ON qs.userId = u.id
-        WHERE qs.isDelete = 0
-        AND u.isDelete = 0
-        GROUP BY qs.userId
-        ORDER BY passedCount DESC
-        LIMIT 10
+            userId,
+            COUNT(1) AS submitQuestionNum,
+            COUNT(CASE WHEN judgeInfo->>'$.message' = '成功' THEN 1 END) AS acceptedQuestionNum
+        FROM
+            question_submit
+        GROUP BY
+            userId
+        ORDER BY
+            acceptedQuestionNum DESC
+        LIMIT 10;
     </select>
 
 </mapper>

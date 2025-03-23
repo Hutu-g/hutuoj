@@ -4,6 +4,7 @@ package com.hutu.hutuojbackendquestionservice.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.hutu.hutuojmodel.model.dto.question.UserSubmitStatsDTO;
 import com.hutu.hutuojmodel.model.entity.QuestionSubmit;
+import com.hutu.hutuojmodel.model.vo.QuestionRankListVO;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ import java.util.List;
 */
 public interface QuestionSubmitMapper extends BaseMapper<QuestionSubmit> {
 
-    List<UserSubmitStatsDTO> selectTopPassedUsers();
+    List<QuestionRankListVO> selectTopPassedUsers();
 
 }
 
