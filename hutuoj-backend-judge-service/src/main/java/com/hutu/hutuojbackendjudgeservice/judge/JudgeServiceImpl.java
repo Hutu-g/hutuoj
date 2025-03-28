@@ -2,6 +2,7 @@ package com.hutu.hutuojbackendjudgeservice.judge;
 
 import cn.hutool.json.JSONUtil;
 
+import com.hutu.hutuojbackendjudgeservice.config.CodeSandBoxTypeConfig;
 import com.hutu.hutuojbackendjudgeservice.judge.codesandbox.CodeSandBox;
 import com.hutu.hutuojbackendjudgeservice.judge.codesandbox.CodeSandBoxFactory;
 import com.hutu.hutuojbackendjudgeservice.judge.codesandbox.CodeSandBoxProxy;
@@ -16,14 +17,21 @@ import com.hutu.hutuojmodel.model.dto.question.JudgeCase;
 import com.hutu.hutuojmodel.model.entity.Question;
 import com.hutu.hutuojmodel.model.entity.QuestionSubmit;
 import com.hutu.hutuojmodel.model.enums.QuestionSubmitStatusEnum;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * @author hutu-g
+ */
 @Service
+@RequiredArgsConstructor
 public class JudgeServiceImpl implements JudgeService {
 
     @Resource
@@ -33,8 +41,8 @@ public class JudgeServiceImpl implements JudgeService {
     private JudgeManager judgeManager;
 
 
-    @Value("${codesandbox.type}")
-    private String type;
+    @Resource
+    private CodeSandBoxTypeConfig codeSandBoxTypeConfig;
 
     @Override
     public QuestionSubmit doJudge(long questionSubmitId) {
@@ -62,7 +70,8 @@ public class JudgeServiceImpl implements JudgeService {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "题目状态更新错误");
         }
         //4.调用代码沙箱
-        CodeSandBox codeSandbox = CodeSandBoxFactory.newInstance(type);
+        CodeSandBox codeSandbox = CodeSandBoxFactory.newInstance(codeSandBoxTypeConfig.getType());
+        System.out.println(codeSandBoxTypeConfig.getType());
         codeSandbox = new CodeSandBoxProxy(codeSandbox);
         String language = questionSubmit.getLanguage();
         String code = questionSubmit.getCode();

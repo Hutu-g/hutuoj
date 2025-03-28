@@ -126,6 +126,17 @@
             <artifactId>spring-session-data-redis</artifactId>
         </dependency>
 
+        <!--nacos配置管理-->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+        </dependency>
+        <!--bootstrap加载到上下文-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-bootstrap</artifactId>
+            <version>3.1.0</version>
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>

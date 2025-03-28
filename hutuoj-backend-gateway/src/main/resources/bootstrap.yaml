@@ -1,0 +1,15 @@
+# 服务名称
+spring:
+  application:
+    name: hutuoj-backend-gateway
+  cloud:
+    nacos:
+      server-addr: 127.0.0.1:8848 # nacos地址
+      config:
+        file-extension: yaml
+        shared-configs:
+          - dataId: knife4j-gateway-config.yaml # 共享日志配置
+  main:
+    web-application-type: reactive
+server:
+  port: 8101

@@ -10,6 +10,9 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 
+/**
+ * @author hutu-g
+ */
 @SpringBootApplication
 @EnableScheduling
 @EnableAspectJAutoProxy(proxyTargetClass = true, exposeProxy = true)
@@ -18,9 +21,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableFeignClients(basePackages = {"com.hutu.hutuojbackendserviceclient.service"})
 public class HutuojBackendJudgeServiceApplication {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         MqInitMain.doInit();
         SpringApplication.run(HutuojBackendJudgeServiceApplication.class, args);
+
     }
+
 
 }
