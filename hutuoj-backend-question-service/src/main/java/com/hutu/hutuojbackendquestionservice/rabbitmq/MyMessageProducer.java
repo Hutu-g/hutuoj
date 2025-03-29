@@ -1,5 +1,7 @@
 package com.hutu.hutuojbackendquestionservice.rabbitmq;
 
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
@@ -20,5 +22,10 @@ public class MyMessageProducer {
     public void sendMessage(String exchange, String routingKey, String message) {
         rabbitTemplate.convertAndSend(exchange, routingKey, message);
     }
+
+    public void sendDelayMessage(String exchange, String routingKey, Message message) {
+        rabbitTemplate.convertAndSend(exchange, routingKey, message);
+    }
+
 
 }

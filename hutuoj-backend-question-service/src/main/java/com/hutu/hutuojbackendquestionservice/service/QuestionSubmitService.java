@@ -51,4 +51,11 @@ public interface QuestionSubmitService extends IService<QuestionSubmit> {
      * @return
      */
     Page<QuestionRankListVO> getUserRankingList(QuestionRankListRequest questionRankListRequest);
+
+    /**
+     * 检查题目订单状态是否完成
+     * @param questionSubmitId
+     * @return
+     */
+    boolean checkQuestionSubmitById(long questionSubmitId);
 }

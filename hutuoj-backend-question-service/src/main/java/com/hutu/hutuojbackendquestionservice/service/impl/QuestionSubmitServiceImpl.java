@@ -31,12 +31,18 @@ import com.hutu.hutuojmodel.model.vo.QuestionSubmitVO;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageBuilder;
+import org.springframework.amqp.core.MessageDeliveryMode;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -100,11 +106,16 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         }
         Long questionSubmitId = questionSubmit.getId();
 
+        Message message = MessageBuilder
+                .withBody(questionSubmitId.toString().getBytes(StandardCharsets.UTF_8))
+                .setDeliveryMode(MessageDeliveryMode.PERSISTENT)
+                .setHeader("x-delay",5000)
+                .build();
+        myMessageProducer.sendDelayMessage("judge_check_exchange", "judge_check_delay", message);
+        System.out.println("消息发送成功");
         myMessageProducer.sendMessage("code_exchange", "my_routingKey", String.valueOf(questionSubmitId));
-//        //异步执行代码
-//        CompletableFuture.runAsync(() -> {
-//            judgeFeignClient.doJudge(questionSubmitId);
-//        });
+
+
 
         return questionSubmitId;
     }
@@ -148,6 +159,12 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
                 .setCurrent(1)
                 .setSize(10)
                 .setTotal(voList.size());
+    }
+
+    @Override
+    public boolean checkQuestionSubmitById(long questionSubmitId) {
+        QuestionSubmit questionSubmit = baseMapper.selectById(questionSubmitId);
+        return QuestionSubmitStatusEnum.SUCCESS.getValue().equals(questionSubmit.getStatus());
     }
 
 
